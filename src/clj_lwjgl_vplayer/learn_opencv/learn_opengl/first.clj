@@ -9,14 +9,14 @@
 
 (defonce window (ref 0))
 
-(defn run []
-  (println "Hello LWJGL " +  (Version/getVersion))
-  (try
-    (init)
-    (loop_)
-    (finally
-      (Callbacks/glfwFreeCallbacks @window)
-      (.free (GLFW/glfwSetErrorCallback nil)))))
+(defn loop_ []
+  (GL/createCapabilities)
+  (GL11/glClearColor 1.0 0.0 0.0 0.0)
+  (while (not (GLFW/glfwWindowShouldClose @window))
+    (GL11/glClear
+     (bit-or GL11/GL_COLOR_BUFFER_BIT  GL11/GL_DEPTH_BUFFER_BIT))
+    (GLFW/glfwSwapBuffers @window)
+    (GLFW/glfwPollEvents)))
 
 (defn init []
   (.set (GLFWErrorCallback/createPrint System/err))
@@ -46,16 +46,16 @@
     (GLFW/glfwSwapInterval 1)
     (GLFW/glfwShowWindow @window)))
 
-(defn loop_ []
-  (GL/createCapabilities)
-  (GL11/glClearColor 1.0 0.0 0.0 0.0)
-  (while (not (GLFW/glfwWindowShouldClose @window))
-    (GL11/glClear
-     (bit-or GL11/GL_COLOR_BUFFER_BIT  GL11/GL_DEPTH_BUFFER_BIT))
-    (GLFW/glfwSwapBuffers @window)
-    (GLFW/glfwPollEvents)))
+(defn run []
+  (println "Hello LWJGL " +  (Version/getVersion))
+  (try
+    (init)
+    (loop_)
+    (finally
+      (Callbacks/glfwFreeCallbacks @window)
+      (.free (GLFW/glfwSetErrorCallback nil)))))
 
 (defn -main []
   (run))
 
-(-main)
+;; (-main)

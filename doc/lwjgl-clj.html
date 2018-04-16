@@ -1,0 +1,825 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2018-04-17 火 01:56 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LWJGL と OpenCV を Clojure で書いていく</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="Mokke Meguru" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { width: 90%; }
+  /*]]>*/-->
+</style>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2018 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">LWJGL と OpenCV を Clojure で書いていく</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org717f748">1. LWJGL と OpenCV を Clojure で書いていく</a></li>
+<li><a href="#org00ad718">2. 動機</a></li>
+<li><a href="#orgb5b722e">3. 出来たこと</a></li>
+<li><a href="#orgeed17a7">4. 実装方法</a>
+<ul>
+<li><a href="#org804cde6">4.1. Project.clj</a></li>
+<li><a href="#orgb37cc2b">4.2. OpenCV</a>
+<ul>
+<li><a href="#org691d903">4.2.1. OpenCV を Clojure で使う</a></li>
+</ul>
+</li>
+<li><a href="#org86619a4">4.3. LWJGL</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+
+<div id="outline-container-org717f748" class="outline-2">
+<h2 id="org717f748"><span class="section-number-2">1</span> LWJGL と OpenCV を Clojure で書いていく</h2>
+</div>
+<div id="outline-container-org00ad718" class="outline-2">
+<h2 id="org00ad718"><span class="section-number-2">2</span> 動機</h2>
+<div class="outline-text-2" id="text-2">
+<ul class="org-ul">
+<li>Lisp っぽいSyntaxで OpenGL とか使ってノベルゲームエンジンを作ってみたい</li>
+<li>JVM 言語で書けば、どこでも動くんじゃないかな？</li>
+<li>ゆくゆくは OpenCV + OpenAL も使って動画ファイルを再生したい</li>
+<li>JavaFX&#x2026;知らない子ですねぇ</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgb5b722e" class="outline-2">
+<h2 id="orgb5b722e"><span class="section-number-2">3</span> 出来たこと</h2>
+<div class="outline-text-2" id="text-3">
+<ul class="org-ul">
+<li>（OpenCV を Clojure で使うことが出来た）&lt;= まだクロスプラットホームに対応させられていない・・・</li>
+<li>LWJGL を、 Java のチュートリアルを変換することで使うことが出来た</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgeed17a7" class="outline-2">
+<h2 id="orgeed17a7"><span class="section-number-2">4</span> 実装方法</h2>
+<div class="outline-text-2" id="text-4">
+<p>
+注意：ここの実装方法は、OpenCV の項をクリアした上でなければ動きません・
+</p>
+</div>
+<div id="outline-container-org804cde6" class="outline-3">
+<h3 id="org804cde6"><span class="section-number-3">4.1</span> Project.clj</h3>
+<div class="outline-text-3" id="text-4-1">
+<p>
+ここが一番重要な部分だと思います。僕ではうまく実装することが出来なかったので、<a href="https://github.com/rogerallen/hello_lwjgl">こちら</a> を参考にさせていただきました。
+(おそらく上のページを踏襲してOpenCVも実装すればクロスプラットホームにすることが出来ると思いますが、自分の技術力では出来ませんでした)
+また、こちらに関してはまるで何をやっているのかわからないので、解説は出来ません（募：解説）
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure"><span style="color: #4f97d7;">(</span>require '<span style="color: #ce537a; font-weight: bold;">leiningen.core.eval</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">def</span> <span style="color: #7590db;">JVM-OPTS</span>
+  <span style="color: #bc6ec5;">{</span><span style="color: #a45bad;">:common</span>   <span style="color: #2d9574;">[]</span>
+   <span style="color: #a45bad;">:macosx</span>   <span style="color: #2d9574;">[</span><span style="color: #2d9574;">"-XstartOnFirstThread"</span> <span style="color: #2d9574;">"-Djava.awt.headless=true"</span><span style="color: #2d9574;">]</span>
+   <span style="color: #a45bad;">:linux</span>    <span style="color: #2d9574;">[]</span>
+   <span style="color: #a45bad;">:windows</span>  <span style="color: #2d9574;">[]</span><span style="color: #bc6ec5;">}</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">jvm-opts</span>
+  <span style="color: #2aa1ae;">"Return a complete vector of jvm-opts for the current os."</span>
+  <span style="color: #bc6ec5;">[]</span> <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">let</span> <span style="color: #2d9574;">[</span>os <span style="color: #67b11d;">(</span><span style="color: #ce537a; font-weight: bold;">leiningen.core.eval</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span>get-os<span style="color: #67b11d;">)</span><span style="color: #2d9574;">]</span>
+       <span style="color: #2d9574;">(</span>vec <span style="color: #67b11d;">(</span>set <span style="color: #b1951d;">(</span>concat <span style="color: #4f97d7;">(</span>get JVM-OPTS <span style="color: #a45bad;">:common</span><span style="color: #4f97d7;">)</span>
+                         <span style="color: #4f97d7;">(</span>get JVM-OPTS os<span style="color: #4f97d7;">)</span><span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">def</span> <span style="color: #7590db;">LWJGL_NS</span> <span style="color: #2aa1ae;">"org.lwjgl"</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #2aa1ae; background-color: #292e34;">;; </span><span style="color: #2aa1ae; background-color: #292e34;">Edit this to change the version.</span>
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">def</span> <span style="color: #7590db;">LWJGL_VERSION</span> <span style="color: #2aa1ae;">"3.1.5"</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #2aa1ae; background-color: #292e34;">;; </span><span style="color: #2aa1ae; background-color: #292e34;">Edit this to add/remove packages.</span>
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">def</span> <span style="color: #7590db;">LWJGL_MODULES</span> <span style="color: #bc6ec5;">[</span><span style="color: #2d9574;">"lwjgl"</span>
+                    <span style="color: #2d9574;">"lwjgl-assimp"</span>
+                    <span style="color: #2d9574;">"lwjgl-bgfx"</span>
+                    <span style="color: #2d9574;">"lwjgl-egl"</span>
+                    <span style="color: #2d9574;">"lwjgl-glfw"</span>
+                    <span style="color: #2d9574;">"lwjgl-jawt"</span>
+                    <span style="color: #2d9574;">"lwjgl-jemalloc"</span>
+                    <span style="color: #2d9574;">"lwjgl-lmdb"</span>
+                    <span style="color: #2d9574;">"lwjgl-lz4"</span>
+                    <span style="color: #2d9574;">"lwjgl-nanovg"</span>
+                    <span style="color: #2d9574;">"lwjgl-nfd"</span>
+                    <span style="color: #2d9574;">"lwjgl-nuklear"</span>
+                    <span style="color: #2d9574;">"lwjgl-odbc"</span>
+                    <span style="color: #2d9574;">"lwjgl-openal"</span>
+                    <span style="color: #2d9574;">"lwjgl-opencl"</span>
+                    <span style="color: #2d9574;">"lwjgl-opengl"</span>
+                    <span style="color: #2d9574;">"lwjgl-opengles"</span>
+                    <span style="color: #2d9574;">"lwjgl-openvr"</span>
+                    <span style="color: #2d9574;">"lwjgl-par"</span>
+                    <span style="color: #2d9574;">"lwjgl-remotery"</span>
+                    <span style="color: #2d9574;">"lwjgl-rpmalloc"</span>
+                    <span style="color: #2d9574;">"lwjgl-sse"</span>
+                    <span style="color: #2d9574;">"lwjgl-stb"</span>
+                    <span style="color: #2d9574;">"lwjgl-tinyexr"</span>
+                    <span style="color: #2d9574;">"lwjgl-tinyfd"</span>
+                    <span style="color: #2d9574;">"lwjgl-tootle"</span>
+                    <span style="color: #2d9574;">"lwjgl-vulkan"</span>
+                    <span style="color: #2d9574;">"lwjgl-xxhash"</span>
+                    <span style="color: #2d9574;">"lwjgl-yoga"</span>
+                    <span style="color: #2d9574;">"lwjgl-zstd"</span><span style="color: #bc6ec5;">]</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #2aa1ae; background-color: #292e34;">;; </span><span style="color: #2aa1ae; background-color: #292e34;">It's safe to just include all native dependencies, but you might</span>
+<span style="color: #2aa1ae; background-color: #292e34;">;; </span><span style="color: #2aa1ae; background-color: #292e34;">save some space if you know you don't need some platform.</span>
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">def</span> <span style="color: #7590db;">LWJGL_PLATFORMS</span> <span style="color: #bc6ec5;">[</span><span style="color: #2d9574;">"linux"</span> <span style="color: #2d9574;">"macos"</span> <span style="color: #2d9574;">"windows"</span><span style="color: #bc6ec5;">]</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #2aa1ae; background-color: #292e34;">;; </span><span style="color: #2aa1ae; background-color: #292e34;">These packages don't have any associated native ones.</span>
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">def</span> <span style="color: #7590db;">no-natives?</span> #<span style="color: #bc6ec5;">{</span><span style="color: #2d9574;">"lwjgl-egl"</span> <span style="color: #2d9574;">"lwjgl-jawt"</span> <span style="color: #2d9574;">"lwjgl-odbc"</span>
+                   <span style="color: #2d9574;">"lwjgl-opencl"</span> <span style="color: #2d9574;">"lwjgl-vulkan"</span><span style="color: #bc6ec5;">}</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">lwjgl-deps-with-natives</span> <span style="color: #bc6ec5;">[]</span>
+  <span style="color: #bc6ec5;">(</span>apply concat
+         <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">for</span> <span style="color: #67b11d;">[</span>m <span style="color: #a45bad;">LWJGL_MODULES</span><span style="color: #67b11d;">]</span>
+           <span style="color: #67b11d;">(</span><span style="color: #4f97d7; font-weight: bold;">let</span> <span style="color: #b1951d;">[</span>prefix <span style="color: #4f97d7;">[</span><span style="color: #bc6ec5;">(</span>symbol <span style="color: #a45bad;">LWJGL_NS</span> m<span style="color: #bc6ec5;">)</span> <span style="color: #a45bad;">LWJGL_VERSION</span><span style="color: #4f97d7;">]</span><span style="color: #b1951d;">]</span>
+             <span style="color: #b1951d;">(</span>into <span style="color: #4f97d7;">[</span>prefix<span style="color: #4f97d7;">]</span>
+                   <span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">if</span> <span style="color: #bc6ec5;">(</span>no-natives? m<span style="color: #bc6ec5;">)</span>
+                     <span style="color: #bc6ec5;">[]</span>
+                     <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">for</span> <span style="color: #2d9574;">[</span>p <span style="color: #a45bad;">LWJGL_PLATFORMS</span><span style="color: #2d9574;">]</span>
+                       <span style="color: #2d9574;">(</span>into prefix <span style="color: #9cb6ad;">[</span><span style="color: #a45bad;">:classifier</span> <span style="color: #4f97d7;">(</span>str <span style="color: #2d9574;">"natives-"</span> p<span style="color: #4f97d7;">)</span>
+                                     <span style="color: #a45bad;">:native-prefix</span> <span style="color: #2d9574;">""</span><span style="color: #9cb6ad;">]</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span><span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">def</span> <span style="color: #7590db;">all-dependencies</span>
+  <span style="color: #bc6ec5;">(</span>into <span style="color: #2aa1ae; background-color: #292e34;">;; </span><span style="color: #2aa1ae; background-color: #292e34;">Add your non-LWJGL dependencies here</span>
+   '<span style="color: #2d9574;">[</span><span style="color: #67b11d;">[</span><span style="color: #ce537a; font-weight: bold;">org.clojure</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span>clojure <span style="color: #2d9574;">"1.8.0"</span><span style="color: #67b11d;">]</span>
+     <span style="color: #67b11d;">[</span><span style="color: #ce537a; font-weight: bold;">org.clojure</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span>core.async <span style="color: #2d9574;">"0.4.474"</span><span style="color: #67b11d;">]</span>
+
+     <span style="color: #2aa1ae; background-color: #292e34;">;; </span><span style="color: #2aa1ae; background-color: #292e34;">this is for Linux</span>
+     <span style="color: #67b11d;">[</span><span style="color: #ce537a; font-weight: bold;">opencv</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span>opencv <span style="color: #2d9574;">"4.0.0"</span><span style="color: #67b11d;">]</span>
+     <span style="color: #67b11d;">[</span><span style="color: #ce537a; font-weight: bold;">opencv</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span>opencv-native <span style="color: #2d9574;">"4.0.0"</span><span style="color: #67b11d;">]</span>
+     <span style="color: #2d9574;">]</span>
+   <span style="color: #2d9574;">(</span>lwjgl-deps-with-natives<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defproject</span> <span style="color: #bc6ec5; font-weight: bold;">clj-lwjgl-vplayer</span> <span style="color: #2d9574;">"0.1.0-SNAPSHOT"</span>
+  <span style="color: #a45bad;">:description</span> <span style="color: #2d9574;">"</span><span style="color: #cc9393;">FIXME</span><span style="color: #2d9574;">: write description"</span>
+  <span style="color: #a45bad;">:url</span> <span style="color: #2d9574;">"http://example.com/FIXME"</span>
+  <span style="color: #a45bad;">:license</span> <span style="color: #bc6ec5;">{</span><span style="color: #a45bad;">:name</span> <span style="color: #2d9574;">"Eclipse Public License"</span>
+            <span style="color: #a45bad;">:url</span> <span style="color: #2d9574;">"http://www.eclipse.org/legal/epl-v10.html"</span><span style="color: #bc6ec5;">}</span>
+  <span style="color: #a45bad;">:dependencies</span> ~all-dependencies
+  <span style="color: #a45bad;">:injections</span> <span style="color: #bc6ec5;">[</span><span style="color: #2d9574;">(</span><span style="color: #ce537a; font-weight: bold;">clojure.lang.RT</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #bc6ec5;">loadLibrary</span> <span style="color: #ce537a; font-weight: bold;">org.opencv.core.Core</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #a45bad;">NATIVE_LIBRARY_NAME</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">]</span>
+  <span style="color: #a45bad;">:jvm-opts</span> ^<span style="color: #a45bad;">:replace</span> ~<span style="color: #bc6ec5;">(</span>jvm-opts<span style="color: #bc6ec5;">)</span>
+  <span style="color: #4f97d7;">)</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgb37cc2b" class="outline-3">
+<h3 id="orgb37cc2b"><span class="section-number-3">4.2</span> OpenCV</h3>
+<div class="outline-text-3" id="text-4-2">
+<p>
+<a href="https://docs.opencv.org/2.4/doc/tutorials/introduction/clojure_dev_intro/clojure_dev_intro.html">ここ</a> をそのまま使いました。以下は自分がやったことをまとめたものです。
+</p>
+</div>
+
+<div id="outline-container-org691d903" class="outline-4">
+<h4 id="org691d903"><span class="section-number-4">4.2.1</span> OpenCV を Clojure で使う</h4>
+<div class="outline-text-4" id="text-4-2-1">
+</div>
+<ol class="org-ol">
+<li><a id="orgf10c14f"></a>Clojure　環境をセットアップしましょう<br />
+<div class="outline-text-5" id="text-4-2-1-1">
+<p>
+Clojureの環境をあなたの開発環境（ex. Mac, Linux）にインストールしてください。
+</p>
+<ul class="org-ul">
+<li><a href="https://github.com/technomancy/leiningen#installation">ここ</a> に従って Leiningen をインストールしましょう</li>
+</ul>
+<p>
+それが終わったら、新しく作業フォルダ (例えば simple-sample) を作成し、そこで <code>lein run</code> コマンドが実行できることを確認してください。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-text">$ cd path/to/simple-sample
+$ lein run
+
+user=&gt;
+</pre>
+</div>
+</div>
+</li>
+
+<li><a id="org23fe846"></a>OpenCV をダウンロードしてビルドしましょう<br />
+<div class="outline-text-5" id="text-4-2-1-2">
+<p>
+以下の例に従って OpenCV をビルドしてください。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">$ mkdir ~/opt
+$ cd ~/opt 
+$ git clone https://github.com/opencv/opencv.git
+$ cd opencv
+$ git checkout <span style="color: #a45bad;">3.4.0</span>
+$ mkdir build
+$ cd build
+$ cmake -DBUILD_SHARED_LIBS=OFF ..
+...
+...
+...
+make -j8
+</pre>
+</div>
+</div>
+</li>
+<li><a id="orgf06c42e"></a>Leiningen plugin のツールである localrepo をインストールしましょう<br />
+<div class="outline-text-5" id="text-4-2-1-3">
+<div class="org-src-container">
+<pre class="src src-shell">$ cd ~/.lein
+</pre>
+</div>
+<p>
+もし ~/.lein フォルダがない場合には作成してください。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">$ mkdir ~/.lein
+$ cd ~/.lein
+</pre>
+</div>
+<p>
+次に、profiles.clj を作成して以下の文を追加してください。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure"><span style="color: #4f97d7;">{</span><span style="color: #a45bad;">:user</span> <span style="color: #bc6ec5;">{</span><span style="color: #a45bad;">:plugins</span> <span style="color: #2d9574;">[</span><span style="color: #67b11d;">[</span>lein-localrepo <span style="color: #2d9574;">"LATEST"</span><span style="color: #67b11d;">]</span><span style="color: #2d9574;">]</span><span style="color: #bc6ec5;">}</span><span style="color: #4f97d7;">}</span>
+</pre>
+</div>
+<p>
+既にファイルがある場合には追記してください。(以下は例)
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure"><span style="color: #4f97d7;">{</span><span style="color: #a45bad;">:user</span> <span style="color: #bc6ec5;">{</span><span style="color: #a45bad;">:plugins</span> <span style="color: #2d9574;">[</span><span style="color: #67b11d;">[</span>lein-cljsbuild <span style="color: #2d9574;">"LATEST"</span><span style="color: #67b11d;">]</span>
+             <span style="color: #67b11d;">[</span>lein-figwheel <span style="color: #2d9574;">"LATEST"</span><span style="color: #67b11d;">]</span>
+             <span style="color: #67b11d;">[</span>lein-localrepo <span style="color: #2d9574;">"LATEST"</span><span style="color: #67b11d;">]</span> <span style="color: #2aa1ae; background-color: #292e34;">;; </span><span style="color: #2aa1ae; background-color: #292e34;">&#12371;&#12371; </span>
+             <span style="color: #67b11d;">[</span><span style="color: #ce537a; font-weight: bold;">luminus</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span>lein-template <span style="color: #2d9574;">"2.9.9.2"</span><span style="color: #67b11d;">]</span><span style="color: #2d9574;">]</span>
+   <span style="color: #a45bad;">:dependencies</span> <span style="color: #2d9574;">[</span><span style="color: #67b11d;">[</span><span style="color: #ce537a; font-weight: bold;">org.clojure</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span>tools.nrepl <span style="color: #2d9574;">"LATEST"</span><span style="color: #67b11d;">]</span><span style="color: #2d9574;">]</span><span style="color: #bc6ec5;">}</span><span style="color: #4f97d7;">}</span>
+</pre>
+</div>
+<p>
+次に以下のコマンドを実行してください。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">$ lein deps
+</pre>
+</div>
+</div>
+</li>
+<li><a id="orgdd9d711"></a>OpenCV を Clojure で使えるようにしましょう<br />
+<div class="outline-text-5" id="text-4-2-1-4">
+<p>
+先程 OpenCV をインストールしたフォルダ <code>~/opt</code> にある以下のファイルが必要になります。
+</p>
+<ul class="org-ul">
+<li>./build/bin/opencv-400.jar</li>
+<li>./build/lib/libopencv<sub>java400</sub>.[so/dll/dylib]
+Linux で OpenCV をビルドした際には .so 、Mac では dylib 、Windows では dll が見つかると思います。
+それぞれの環境で必要になりますので、見つかったそれを使いましょう（逆に言うと、このlibファイルが対応していないOSでは動かないので、つまりこれを用いてクロスプラットフォームなアプリケーションを作るのは難しいということになる・・・のかな？）</li>
+</ul>
+<p>
+　これらのファイルを以下の例に従って配置してください。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">$ mkdir ~/opencv-to-native
+$ cp /path/to/opencv-400.jar ~/opencv-to-native
+$ mkdir -p ~/opencv-to-native/native/macosx/x86_64 <span style="color: #2aa1ae; background-color: #292e34;"># </span><span style="color: #2aa1ae; background-color: #292e34;">&#21508;&#29872;&#22659;&#12395;&#21512;&#12431;&#12379;&#12390;&#12367;&#12384;&#12373;&#12356;</span>
+$ cp /path/to/libopencv_java400.dylib <span style="color: #2aa1ae; background-color: #292e34;"># </span><span style="color: #2aa1ae; background-color: #292e34;">&#21508;&#29872;&#22659;&#12395;&#21512;&#12431;&#12379;&#12390;&#12367;&#12384;&#12373;&#12356;</span>
+</pre>
+</div>
+
+<p>
+以下の表に従って、nativeフォルダに適切なファイルを設置してください。
+</p>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">OS</th>
+<th scope="col" class="org-left">&#xa0;</th>
+<th scope="col" class="org-left">&#xa0;</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">Mac</td>
+<td class="org-left">-&gt;</td>
+<td class="org-left">macosx</td>
+</tr>
+
+<tr>
+<td class="org-left">Windows</td>
+<td class="org-left">-&gt;</td>
+<td class="org-left">windows</td>
+</tr>
+
+<tr>
+<td class="org-left">Linux</td>
+<td class="org-left">-&gt;</td>
+<td class="org-left">linux</td>
+</tr>
+
+<tr>
+<td class="org-left">SunOS</td>
+<td class="org-left">-&gt;</td>
+<td class="org-left">solaris</td>
+</tr>
+</tbody>
+<tbody>
+<tr>
+<td class="org-left">Architectures</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+</tr>
+</tbody>
+<tbody>
+<tr>
+<td class="org-left">amd64</td>
+<td class="org-left">-&gt;</td>
+<td class="org-left">x86<sub>64</sub></td>
+</tr>
+
+<tr>
+<td class="org-left">x86<sub>64</sub></td>
+<td class="org-left">-&gt;</td>
+<td class="org-left">x86<sub>64</sub></td>
+</tr>
+
+<tr>
+<td class="org-left">x86</td>
+<td class="org-left">-&gt;</td>
+<td class="org-left">x86</td>
+</tr>
+
+<tr>
+<td class="org-left">i386</td>
+<td class="org-left">-&gt;</td>
+<td class="org-left">x86</td>
+</tr>
+
+<tr>
+<td class="org-left">arm</td>
+<td class="org-left">-&gt;</td>
+<td class="org-left">arm</td>
+</tr>
+
+<tr>
+<td class="org-left">sparc</td>
+<td class="org-left">-&gt;</td>
+<td class="org-left">sparc</td>
+</tr>
+</tbody>
+</table>
+</div>
+</li>
+<li><a id="orga320c03"></a>native library を jar ファイルにパッケージ化しましょう<br />
+<div class="outline-text-5" id="text-4-2-1-5">
+<p>
+以下のコマンドを実行して native-jar を作成してください。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">$ cd ~/opencv-to-native
+$ jar -cMf opencv-native-400.jar native
+</pre>
+</div>
+
+<p>
+これによって以下のような構造が出来上がるはずです。
+</p>
+<div class="org-src-container">
+<pre class="src src-txt">opencv-to-native 
+|
+|- native 
+|  |- macosx 
+|     |- x86_64
+|        |- libopencv_java400.dylib
+|- opencv-400.jar
+|- opencv-native-400.jar
+</pre>
+</div>
+</div>
+</li>
+<li><a id="orgee244e3"></a>leiningen に作成した jar ファイルをインストールしましょう<br />
+<div class="outline-text-5" id="text-4-2-1-6">
+<p>
+以下のコマンドを実行してください。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">$ cd ~/opencv-to-native
+$ lein localrepo install opencv-400.jar opencv/opencv <span style="color: #a45bad;">4.0.0</span>
+$ lein localrepo install opencv-native-400.jar opencv/opencv-native <span style="color: #a45bad;">4.0.0</span>
+</pre>
+</div>
+</div>
+</li>
+<li><a id="org6982e25"></a>追記<br />
+<div class="outline-text-5" id="text-4-2-1-7">
+<p>
+以上であなたの環境でOpenCVをleiningen から簡単に利用することが出来るようになりました。以下に使用例として project.clj を紹介します。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">   <span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defproject</span> <span style="color: #bc6ec5; font-weight: bold;">simple-sample</span> <span style="color: #2d9574;">"0.1.0-SNAPSHOT"</span>
+<span style="color: #a45bad;">:description</span> <span style="color: #2d9574;">"</span><span style="color: #cc9393;">FIXME</span><span style="color: #2d9574;">: write description"</span>
+<span style="color: #a45bad;">:url</span> <span style="color: #2d9574;">"http://example.com/FIXME"</span>
+<span style="color: #a45bad;">:license</span> <span style="color: #bc6ec5;">{</span><span style="color: #a45bad;">:name</span> <span style="color: #2d9574;">"Eclipse Public License"</span>
+          <span style="color: #a45bad;">:url</span> <span style="color: #2d9574;">"http://www.eclipse.org/legal/epl-v10.html"</span><span style="color: #bc6ec5;">}</span>
+<span style="color: #a45bad;">:dependencies</span> <span style="color: #bc6ec5;">[</span><span style="color: #2d9574;">[</span><span style="color: #ce537a; font-weight: bold;">org.clojure</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span>clojure <span style="color: #2d9574;">"1.5.1"</span><span style="color: #2d9574;">]</span>
+               <span style="color: #2d9574;">[</span><span style="color: #ce537a; font-weight: bold;">opencv</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span>opencv <span style="color: #a45bad;">4.0.0</span><span style="color: #2d9574;">"]</span>
+<span style="color: #2d9574;">               [opencv/opencv-native "</span><span style="color: #a45bad;">4..7</span><span style="color: #2d9574;">"]])</span>
+</pre>
+</div>
+</div>
+</li>
+<li><a id="org237954c"></a>書いたプログラム<br />
+<div class="outline-text-5" id="text-4-2-1-8">
+<p>
+<a href="http://asukiaaa.blogspot.jp/2017/04/clojureopencv32javaxswing.html">ここ</a> にあるコードを写経しました。
+<a href="https://github.com/MokkeMeguru/clj-lwjgl-vplayer/blob/master/src/clj_lwjgl_vplayer/learn_opencv/clj-cv-example.clj">書いたもの</a>
+</p>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div id="outline-container-org86619a4" class="outline-3">
+<h3 id="org86619a4"><span class="section-number-3">4.3</span> LWJGL</h3>
+<div class="outline-text-3" id="text-4-3">
+<p>
+<a href="https://github.com/lwjglgamedev/lwjglbook/blob/master/chapter01/src/main/java/org/lwjglb/game/Main.java">ここ</a> のコードを素直にClojureに変換しました。
+</p>
+<ul class="org-ul">
+<li><p>
+ネームスペースのあれこれ
+必要だったものを適宜追加していきました。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">
+   <span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">ns</span> <span style="color: #ce537a; font-weight: bold;">clj-lwjgl-vplayer.learn-opencv.learn-opengl.first</span>
+<span style="color: #bc6ec5;">(</span><span style="color: #a45bad;">:import</span> <span style="color: #2d9574;">(</span><span style="color: #ce537a; font-weight: bold;">org.lwjgl.opengl</span> <span style="color: #a45bad;">GL</span> <span style="color: #ce537a; font-weight: bold;">GL11</span><span style="color: #2d9574;">)</span>
+         <span style="color: #2d9574;">(</span><span style="color: #ce537a; font-weight: bold;">org.lwjgl</span> <span style="color: #ce537a; font-weight: bold;">Version</span><span style="color: #2d9574;">)</span>
+         <span style="color: #2d9574;">(</span><span style="color: #ce537a; font-weight: bold;">org.lwjgl.glfw</span> <span style="color: #a45bad;">GLFW</span> <span style="color: #ce537a; font-weight: bold;">Callbacks</span>
+                         <span style="color: #ce537a; font-weight: bold;">GLFWErrorCallback</span> <span style="color: #ce537a; font-weight: bold;">GLFWKeyCallback</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+</pre>
+</div></li>
+
+<li><p>
+パラメータの保持
+グローバル変数などはClojureの場合では atom や ref を使うようです。
+window に協調性のある ref を使っているのは これを使って Exit 等を判定しているからです。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure"><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defonce</span> <span style="color: #7590db;">param</span> <span style="color: #bc6ec5;">(</span>atom <span style="color: #2d9574;">{</span><span style="color: #a45bad;">:width</span> <span style="color: #a45bad;">300</span> <span style="color: #2aa1ae; background-color: #292e34;">;; </span><span style="color: #2aa1ae; background-color: #292e34;">&#19968;&#22238;&#23459;&#35328;&#12377;&#12428;&#12400;&#33391;&#12356;&#12398;&#12391; defonce &#12434;&#20351;&#12387;&#12390;&#12356;&#12414;&#12377;</span>
+                      <span style="color: #a45bad;">:height</span> <span style="color: #a45bad;">300</span><span style="color: #2d9574;">}</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defonce</span> <span style="color: #7590db;">window</span> <span style="color: #bc6ec5;">(</span>ref <span style="color: #a45bad;">0</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+</pre>
+</div></li>
+
+<li>run 関数
+そのままですね。特に難しいことはないと思いますが、static method の書き方 (Class/static-method) という書き方を思い出すのに少し苦労しました。
+loop 関数は　Clojure の標準ライブラリにあるので、loop_ としました。</li>
+<li><p>
+init 関数
+こちらもほとんど変わりませんが、一部難しかった部分があったので詳しく説明しようと思います。
+以下の Java コードを見てください。
+</p>
+<div class="org-src-container">
+<pre class="src src-java">glfwSetKeyCallback<span style="color: #4f97d7;">(</span>window, <span style="color: #bc6ec5;">(</span>window, key, scancode, action, mods<span style="color: #bc6ec5;">)</span> -&gt; <span style="color: #bc6ec5;">{</span>
+            <span style="color: #4f97d7; font-weight: bold;">if</span> <span style="color: #2d9574;">(</span>key == GLFW_KEY_ESCAPE &amp;&amp; action == GLFW_RELEASE<span style="color: #2d9574;">)</span> <span style="color: #2d9574;">{</span>
+                glfwSetWindowShouldClose<span style="color: #67b11d;">(</span>window, <span style="color: #a45bad;">true</span><span style="color: #67b11d;">)</span>; <span style="color: #2aa1ae; background-color: #292e34;">// </span><span style="color: #2aa1ae; background-color: #292e34;">We will detect this in the rendering loop</span>
+            <span style="color: #2d9574;">}</span>
+</pre>
+</div>
+<p>
+こちら、lambda 式を使っていますね。これ自体はLispの民としてはとてもうれしいのですが、これを Clojure にどう持ってくるのかが大変難しかったです。
+イメージとしてJavaの lambda 式は <code>無名のクラスにつく特定の関数を作る (Overrideする)</code> といった形で、glfwSetKeyCallback の第2引数は GLFWKeyCallback クラスの Invoke となっているようです。（LWJGLのAPI ドキュメントより）
+そのため、Clojure 側としては、
+</p>
+<ol class="org-ol">
+<li>GLFWKeyCallback を proxy で実装する</li>
+<li><p>
+Invoke 関数を作る
+が必要となります。
+つまり以下のようになるわけです。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure"><span style="color: #4f97d7;">(</span>proxy <span style="color: #bc6ec5;">[</span><span style="color: #ce537a; font-weight: bold;">GLFWKeyCallback</span><span style="color: #bc6ec5;">]</span> <span style="color: #bc6ec5;">[]</span>
+   <span style="color: #bc6ec5;">(</span>invoke <span style="color: #2d9574;">[</span>window k scancode action mods<span style="color: #2d9574;">]</span>
+         <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">when</span> <span style="color: #67b11d;">(</span><span style="color: #4f97d7; font-weight: bold;">and</span> <span style="color: #b1951d;">(</span>== k <span style="color: #ce537a; font-weight: bold;">GLFW</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #a45bad;">GLFW_KEY_ESCAPE</span><span style="color: #b1951d;">)</span>
+                    <span style="color: #b1951d;">(</span>== action <span style="color: #ce537a; font-weight: bold;">GLFW</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #a45bad;">GLFW_RELEASE</span><span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span>
+           <span style="color: #67b11d;">(</span><span style="color: #ce537a; font-weight: bold;">GLFW</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #bc6ec5;">glfwSetWindowShouldClose</span> @window <span style="color: #a45bad;">true</span><span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+</pre>
+</div></li>
+</ol></li>
+<li>loop_ 関数 &amp;&amp; -main 関数
+そのままです。java の　( A | B ) ってビット演算のことなんですね。すっかり忘れていました。</li>
+</ul>
+<p>
+ソース全体
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure"><span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">ns</span> <span style="color: #ce537a; font-weight: bold;">clj-lwjgl-vplayer.learn-opencv.learn-opengl.first</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #a45bad;">:import</span> <span style="color: #2d9574;">(</span><span style="color: #ce537a; font-weight: bold;">org.lwjgl.opengl</span> <span style="color: #a45bad;">GL</span> <span style="color: #ce537a; font-weight: bold;">GL11</span><span style="color: #2d9574;">)</span>
+           <span style="color: #2d9574;">(</span><span style="color: #ce537a; font-weight: bold;">org.lwjgl</span> <span style="color: #ce537a; font-weight: bold;">Version</span><span style="color: #2d9574;">)</span>
+           <span style="color: #2d9574;">(</span><span style="color: #ce537a; font-weight: bold;">org.lwjgl.glfw</span> <span style="color: #a45bad;">GLFW</span> <span style="color: #ce537a; font-weight: bold;">Callbacks</span>
+                           <span style="color: #ce537a; font-weight: bold;">GLFWErrorCallback</span> <span style="color: #ce537a; font-weight: bold;">GLFWKeyCallback</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defonce</span> <span style="color: #7590db;">param</span> <span style="color: #bc6ec5;">(</span>atom <span style="color: #2d9574;">{</span><span style="color: #a45bad;">:width</span> <span style="color: #a45bad;">300</span>
+                      <span style="color: #a45bad;">:height</span> <span style="color: #a45bad;">300</span><span style="color: #2d9574;">}</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defonce</span> <span style="color: #7590db;">window</span> <span style="color: #bc6ec5;">(</span>ref <span style="color: #a45bad;">0</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">run</span> <span style="color: #bc6ec5;">[]</span>
+  <span style="color: #bc6ec5;">(</span>println <span style="color: #2d9574;">"Hello LWJGL "</span> +  <span style="color: #2d9574;">(</span><span style="color: #ce537a; font-weight: bold;">Version</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #bc6ec5;">getVersion</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">try</span>
+    <span style="color: #2d9574;">(</span>init<span style="color: #2d9574;">)</span>
+    <span style="color: #2d9574;">(</span>loop_<span style="color: #2d9574;">)</span>
+    <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">finally</span>
+      <span style="color: #67b11d;">(</span><span style="color: #ce537a; font-weight: bold;">Callbacks</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #bc6ec5;">glfwFreeCallbacks</span> @window<span style="color: #67b11d;">)</span>
+      <span style="color: #67b11d;">(</span><span style="color: #bc6ec5;">.free</span> <span style="color: #b1951d;">(</span><span style="color: #ce537a; font-weight: bold;">GLFW</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #bc6ec5;">glfwSetErrorCallback</span> <span style="color: #a45bad;">nil</span><span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">init</span> <span style="color: #bc6ec5;">[]</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #bc6ec5;">.set</span> <span style="color: #2d9574;">(</span><span style="color: #ce537a; font-weight: bold;">GLFWErrorCallback</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #bc6ec5;">createPrint</span> <span style="color: #ce537a; font-weight: bold;">System</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span>err<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">when</span> <span style="color: #2d9574;">(</span>not <span style="color: #67b11d;">(</span><span style="color: #ce537a; font-weight: bold;">GLFW</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #bc6ec5;">glfwInit</span><span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span>
+    <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">throw</span> <span style="color: #67b11d;">(</span><span style="color: #ce537a; font-weight: bold;">IllegalStateException.</span> <span style="color: #b1951d;">(</span>str <span style="color: #2d9574;">"Unable to initialize GLFW"</span><span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #ce537a; font-weight: bold;">GLFW</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #bc6ec5;">glfwDefaultWindowHints</span><span style="color: #bc6ec5;">)</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #ce537a; font-weight: bold;">GLFW</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #bc6ec5;">glfwWindowHint</span> <span style="color: #ce537a; font-weight: bold;">GLFW</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #a45bad;">GLFW_VISIBLE</span> <span style="color: #ce537a; font-weight: bold;">GLFW</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #a45bad;">GLFW_FALSE</span><span style="color: #bc6ec5;">)</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">let</span> <span style="color: #2d9574;">[</span>width <span style="color: #67b11d;">(</span><span style="color: #a45bad;">:width</span> @param<span style="color: #67b11d;">)</span>
+        height <span style="color: #67b11d;">(</span><span style="color: #a45bad;">:height</span> @param<span style="color: #67b11d;">)</span><span style="color: #2d9574;">]</span>
+    <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">dosync</span>
+     <span style="color: #67b11d;">(</span>ref-set window <span style="color: #b1951d;">(</span><span style="color: #ce537a; font-weight: bold;">GLFW</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #bc6ec5;">glfwCreateWindow</span> width height <span style="color: #2d9574;">"Hello World!"</span> <span style="color: #a45bad;">0</span> <span style="color: #a45bad;">0</span><span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span>
+    <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">when</span> <span style="color: #67b11d;">(</span>nil? @window<span style="color: #67b11d;">)</span>
+      <span style="color: #67b11d;">(</span><span style="color: #4f97d7; font-weight: bold;">throw</span> <span style="color: #b1951d;">(</span><span style="color: #ce537a; font-weight: bold;">RuntimeException.</span> <span style="color: #2d9574;">"Failed to create GLFW window"</span><span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span>
+    <span style="color: #2d9574;">(</span><span style="color: #ce537a; font-weight: bold;">GLFW</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #bc6ec5;">glfwSetKeyCallback</span>
+     @window
+     <span style="color: #67b11d;">(</span>proxy <span style="color: #b1951d;">[</span><span style="color: #ce537a; font-weight: bold;">GLFWKeyCallback</span><span style="color: #b1951d;">]</span> <span style="color: #b1951d;">[]</span>
+       <span style="color: #b1951d;">(</span>invoke <span style="color: #4f97d7;">[</span>window k scancode action mods<span style="color: #4f97d7;">]</span>
+         <span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">when</span> <span style="color: #bc6ec5;">(</span><span style="color: #4f97d7; font-weight: bold;">and</span> <span style="color: #2d9574;">(</span>== k <span style="color: #ce537a; font-weight: bold;">GLFW</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #a45bad;">GLFW_KEY_ESCAPE</span><span style="color: #2d9574;">)</span>
+                    <span style="color: #2d9574;">(</span>== action <span style="color: #ce537a; font-weight: bold;">GLFW</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #a45bad;">GLFW_RELEASE</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span>
+           <span style="color: #bc6ec5;">(</span><span style="color: #ce537a; font-weight: bold;">GLFW</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #bc6ec5;">glfwSetWindowShouldClose</span> @window <span style="color: #a45bad;">true</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span><span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span>
+    <span style="color: #2d9574;">(</span><span style="color: #4f97d7; font-weight: bold;">let</span> <span style="color: #67b11d;">[</span>vidmode <span style="color: #b1951d;">(</span><span style="color: #ce537a; font-weight: bold;">GLFW</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #bc6ec5;">glfwGetVideoMode</span> <span style="color: #4f97d7;">(</span><span style="color: #ce537a; font-weight: bold;">GLFW</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #bc6ec5;">glfwGetPrimaryMonitor</span><span style="color: #4f97d7;">)</span><span style="color: #b1951d;">)</span><span style="color: #67b11d;">]</span>
+      <span style="color: #67b11d;">(</span><span style="color: #ce537a; font-weight: bold;">GLFW</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #bc6ec5;">glfwSetWindowPos</span>
+       @window
+       <span style="color: #b1951d;">(</span>/ <span style="color: #4f97d7;">(</span>- <span style="color: #bc6ec5;">(</span><span style="color: #bc6ec5;">.width</span> vidmode<span style="color: #bc6ec5;">)</span> width<span style="color: #4f97d7;">)</span> <span style="color: #a45bad;">2</span><span style="color: #b1951d;">)</span>
+       <span style="color: #b1951d;">(</span>/ <span style="color: #4f97d7;">(</span>- <span style="color: #bc6ec5;">(</span><span style="color: #bc6ec5;">.height</span> vidmode<span style="color: #bc6ec5;">)</span> height<span style="color: #4f97d7;">)</span> <span style="color: #a45bad;">2</span><span style="color: #b1951d;">)</span><span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span>
+    <span style="color: #2d9574;">(</span><span style="color: #ce537a; font-weight: bold;">GLFW</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #bc6ec5;">glfwMakeContextCurrent</span> @window<span style="color: #2d9574;">)</span>
+    <span style="color: #2d9574;">(</span><span style="color: #ce537a; font-weight: bold;">GLFW</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #bc6ec5;">glfwSwapInterval</span> <span style="color: #a45bad;">1</span><span style="color: #2d9574;">)</span>
+    <span style="color: #2d9574;">(</span><span style="color: #ce537a; font-weight: bold;">GLFW</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #bc6ec5;">glfwShowWindow</span> @window<span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">loop_</span> <span style="color: #bc6ec5;">[]</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #ce537a; font-weight: bold;">GL</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #bc6ec5;">createCapabilities</span><span style="color: #bc6ec5;">)</span>
+  <span style="color: #bc6ec5;">(</span><span style="color: #ce537a; font-weight: bold;">GL11</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #bc6ec5;">glClearColor</span> <span style="color: #a45bad;">1.0</span> <span style="color: #a45bad;">0.0</span> <span style="color: #a45bad;">0.0</span> <span style="color: #a45bad;">0.0</span><span style="color: #bc6ec5;">)</span>
+  <span style="color: #bc6ec5;">(</span>while <span style="color: #2d9574;">(</span>not <span style="color: #67b11d;">(</span><span style="color: #ce537a; font-weight: bold;">GLFW</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #bc6ec5;">glfwWindowShouldClose</span> @window<span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span>
+    <span style="color: #2d9574;">(</span><span style="color: #ce537a; font-weight: bold;">GL11</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #bc6ec5;">glClear</span>
+     <span style="color: #67b11d;">(</span>bit-or <span style="color: #ce537a; font-weight: bold;">GL11</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #a45bad;">GL_COLOR_BUFFER_BIT</span>  <span style="color: #ce537a; font-weight: bold;">GL11</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #a45bad;">GL_DEPTH_BUFFER_BIT</span><span style="color: #67b11d;">)</span><span style="color: #2d9574;">)</span>
+    <span style="color: #2d9574;">(</span><span style="color: #ce537a; font-weight: bold;">GLFW</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #bc6ec5;">glfwSwapBuffers</span> @window<span style="color: #2d9574;">)</span>
+    <span style="color: #2d9574;">(</span><span style="color: #ce537a; font-weight: bold;">GLFW</span><span style="color: #b2b2b2; background-color: #292b2e;">/</span><span style="color: #bc6ec5;">glfwPollEvents</span><span style="color: #2d9574;">)</span><span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span><span style="color: #4f97d7; font-weight: bold;">defn</span> <span style="color: #bc6ec5; font-weight: bold;">-main</span> <span style="color: #bc6ec5;">[]</span>
+  <span style="color: #bc6ec5;">(</span>run<span style="color: #bc6ec5;">)</span><span style="color: #4f97d7;">)</span>
+
+<span style="color: #4f97d7;">(</span>-main<span style="color: #4f97d7;">)</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Date: 2018-04-17 火 00:00</p>
+<p class="author">Author: Mokke Meguru</p>
+<p class="date">Created: 2018-04-17 火 01:56</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

@@ -87,6 +87,7 @@
   :dependencies ~all-dependencies
   :injections [(clojure.lang.RT/loadLibrary org.opencv.core.Core/NATIVE_LIBRARY_NAME)]
   :jvm-opts ^:replace ~(jvm-opts)
+  :main clj-lwjgl-vplayer.core
   )
 
 ;; Here is greater solution

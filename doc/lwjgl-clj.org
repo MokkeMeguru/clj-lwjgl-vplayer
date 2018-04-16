@@ -10,15 +10,6 @@
 #+SELECT_TAGS: export
 #+EXCLUDE_TAGS: noexport
 #+CREATOR: Emacs 25.3.1 (Org mode 9.1.6)
-#+LATEX_CLASS: article
-#+LATEX_CLASS_OPTIONS:
-#+LATEX_HEADER:
-#+LATEX_HEADER_EXTRA:
-#+DESCRIPTION:
-#+KEYWORDS:
-#+SUBTITLE:
-#+LATEX_COMPILER: pdflatex
-#+DATE: \today
 
 
 * LWJGL と OpenCV を Clojure で書いていく
@@ -259,10 +250,120 @@
      #+END_SRC
 **** 書いたプログラム
      [[http://asukiaaa.blogspot.jp/2017/04/clojureopencv32javaxswing.html][ここ]] にあるコードを写経しました。
-     
+     [[https://github.com/MokkeMeguru/clj-lwjgl-vplayer/blob/master/src/clj_lwjgl_vplayer/learn_opencv/clj-cv-example.clj][書いたもの]]
 ** LWJGL
    [[https://github.com/lwjglgamedev/lwjglbook/blob/master/chapter01/src/main/java/org/lwjglb/game/Main.java][ここ]] のコードを素直にClojureに変換しました。
+   - ネームスペースのあれこれ
+     必要だったものを適宜追加していきました。
+     #+BEGIN_SRC clojure
+
+     (ns clj-lwjgl-vplayer.learn-opencv.learn-opengl.first
+  (:import (org.lwjgl.opengl GL GL11)
+           (org.lwjgl Version)
+           (org.lwjgl.glfw GLFW Callbacks
+                           GLFWErrorCallback GLFWKeyCallback)))
+     #+END_SRC
+
+   - パラメータの保持
+     グローバル変数などはClojureの場合では atom や ref を使うようです。
+     window に協調性のある ref を使っているのは これを使って Exit 等を判定しているからです。
+     #+BEGIN_SRC clojure
+(defonce param (atom {:width 300 ;; 一回宣言すれば良いので defonce を使っています
+                      :height 300}))
+
+(defonce window (ref 0))
+
+     #+END_SRC
+
+   - run 関数
+     そのままですね。特に難しいことはないと思いますが、static method の書き方 (Class/static-method) という書き方を思い出すのに少し苦労しました。
+     loop 関数は　Clojure の標準ライブラリにあるので、loop_ としました。
+   - init 関数
+     こちらもほとんど変わりませんが、一部難しかった部分があったので詳しく説明しようと思います。
+     以下の Java コードを見てください。
+     #+BEGIN_SRC java
+glfwSetKeyCallback(window, (window, key, scancode, action, mods) -> {
+            if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
+                glfwSetWindowShouldClose(window, true); // We will detect this in the rendering loop
+            }
+     #+END_SRC
+     こちら、lambda 式を使っていますね。これ自体はLispの民としてはとてもうれしいのですが、これを Clojure にどう持ってくるのかが大変難しかったです。
+     イメージとしてJavaの lambda 式は =無名のクラスにつく特定の関数を作る (Overrideする)= といった形で、glfwSetKeyCallback の第2引数は GLFWKeyCallback クラスの Invoke となっているようです。（LWJGLのAPI ドキュメントより）
+     そのため、Clojure 側としては、
+     1. GLFWKeyCallback を proxy で実装する
+     2. Invoke 関数を作る
+          が必要となります。
+          つまり以下のようになるわけです。
+          #+BEGIN_SRC clojure
+     (proxy [GLFWKeyCallback] []
+        (invoke [window k scancode action mods]
+              (when (and (== k GLFW/GLFW_KEY_ESCAPE)
+                         (== action GLFW/GLFW_RELEASE))
+                (GLFW/glfwSetWindowShouldClose @window true))))
+          #+END_SRC
+   - loop_ 関数 && -main 関数
+     そのままです。java の　( A | B ) ってビット演算のことなんですね。すっかり忘れていました。
    ソース全体
    #+BEGIN_SRC clojure
-   
+(ns clj-lwjgl-vplayer.learn-opencv.learn-opengl.first
+  (:import (org.lwjgl.opengl GL GL11)
+           (org.lwjgl Version)
+           (org.lwjgl.glfw GLFW Callbacks
+                           GLFWErrorCallback GLFWKeyCallback)))
+
+(defonce param (atom {:width 300
+                      :height 300}))
+
+(defonce window (ref 0))
+
+(defn run []
+  (println "Hello LWJGL " +  (Version/getVersion))
+  (try
+    (init)
+    (loop_)
+    (finally
+      (Callbacks/glfwFreeCallbacks @window)
+      (.free (GLFW/glfwSetErrorCallback nil)))))
+
+(defn init []
+  (.set (GLFWErrorCallback/createPrint System/err))
+  (when (not (GLFW/glfwInit))
+    (throw (IllegalStateException. (str "Unable to initialize GLFW"))))
+  (GLFW/glfwDefaultWindowHints)
+  (GLFW/glfwWindowHint GLFW/GLFW_VISIBLE GLFW/GLFW_FALSE)
+  (let [width (:width @param)
+        height (:height @param)]
+    (dosync
+     (ref-set window (GLFW/glfwCreateWindow width height "Hello World!" 0 0)))
+    (when (nil? @window)
+      (throw (RuntimeException. "Failed to create GLFW window")))
+    (GLFW/glfwSetKeyCallback
+     @window
+     (proxy [GLFWKeyCallback] []
+       (invoke [window k scancode action mods]
+         (when (and (== k GLFW/GLFW_KEY_ESCAPE)
+                    (== action GLFW/GLFW_RELEASE))
+           (GLFW/glfwSetWindowShouldClose @window true)))))
+    (let [vidmode (GLFW/glfwGetVideoMode (GLFW/glfwGetPrimaryMonitor))]
+      (GLFW/glfwSetWindowPos
+       @window
+       (/ (- (.width vidmode) width) 2)
+       (/ (- (.height vidmode) height) 2)))
+    (GLFW/glfwMakeContextCurrent @window)
+    (GLFW/glfwSwapInterval 1)
+    (GLFW/glfwShowWindow @window)))
+
+(defn loop_ []
+  (GL/createCapabilities)
+  (GL11/glClearColor 1.0 0.0 0.0 0.0)
+  (while (not (GLFW/glfwWindowShouldClose @window))
+    (GL11/glClear
+     (bit-or GL11/GL_COLOR_BUFFER_BIT  GL11/GL_DEPTH_BUFFER_BIT))
+    (GLFW/glfwSwapBuffers @window)
+    (GLFW/glfwPollEvents)))
+
+(defn -main []
+  (run))
+
+(-main)
    #+END_SRC
