@@ -1,0 +1,268 @@
+#+OPTIONS: ':nil *:t -:t ::t <:t H:3 \n:nil ^:t arch:headline author:t
+#+OPTIONS: broken-links:nil c:nil creator:nil d:(not "LOGBOOK") date:t e:t
+#+OPTIONS: email:nil f:t inline:t num:t p:nil pri:nil prop:nil stat:t tags:t
+#+OPTIONS: tasks:t tex:t timestamp:t title:t toc:t todo:t |:t
+#+TITLE: LWJGL と OpenCV を Clojure で書いていく
+#+DATE: <2018-04-17 火>
+#+AUTHOR: Mokke Meguru 
+#+EMAIL: 
+#+LANGUAGE: en
+#+SELECT_TAGS: export
+#+EXCLUDE_TAGS: noexport
+#+CREATOR: Emacs 25.3.1 (Org mode 9.1.6)
+#+LATEX_CLASS: article
+#+LATEX_CLASS_OPTIONS:
+#+LATEX_HEADER:
+#+LATEX_HEADER_EXTRA:
+#+DESCRIPTION:
+#+KEYWORDS:
+#+SUBTITLE:
+#+LATEX_COMPILER: pdflatex
+#+DATE: \today
+
+
+* LWJGL と OpenCV を Clojure で書いていく
+* 動機
+  - Lisp っぽいSyntaxで OpenGL とか使ってノベルゲームエンジンを作ってみたい
+  - JVM 言語で書けば、どこでも動くんじゃないかな？
+  - ゆくゆくは OpenCV + OpenAL も使って動画ファイルを再生したい
+  - JavaFX...知らない子ですねぇ
+
+* 出来たこと
+  - （OpenCV を Clojure で使うことが出来た）<= まだクロスプラットホームに対応させられていない・・・
+  - LWJGL を、 Java のチュートリアルを変換することで使うことが出来た
+
+* 実装方法
+  注意：ここの実装方法は、OpenCV の項をクリアした上でなければ動きません・
+** Project.clj
+   ここが一番重要な部分だと思います。僕ではうまく実装することが出来なかったので、[[https://github.com/rogerallen/hello_lwjgl][こちら]] を参考にさせていただきました。
+   (おそらく上のページを踏襲してOpenCVも実装すればクロスプラットホームにすることが出来ると思いますが、自分の技術力では出来ませんでした)
+   また、こちらに関してはまるで何をやっているのかわからないので、解説は出来ません（募：解説）
+   #+BEGIN_SRC clojure
+(require 'leiningen.core.eval)
+
+(def JVM-OPTS
+  {:common   []
+   :macosx   ["-XstartOnFirstThread" "-Djava.awt.headless=true"]
+   :linux    []
+   :windows  []})
+
+(defn jvm-opts
+  "Return a complete vector of jvm-opts for the current os."
+  [] (let [os (leiningen.core.eval/get-os)]
+       (vec (set (concat (get JVM-OPTS :common)
+                         (get JVM-OPTS os))))))
+(def LWJGL_NS "org.lwjgl")
+
+;; Edit this to change the version.
+(def LWJGL_VERSION "3.1.5")
+
+;; Edit this to add/remove packages.
+(def LWJGL_MODULES ["lwjgl"
+                    "lwjgl-assimp"
+                    "lwjgl-bgfx"
+                    "lwjgl-egl"
+                    "lwjgl-glfw"
+                    "lwjgl-jawt"
+                    "lwjgl-jemalloc"
+                    "lwjgl-lmdb"
+                    "lwjgl-lz4"
+                    "lwjgl-nanovg"
+                    "lwjgl-nfd"
+                    "lwjgl-nuklear"
+                    "lwjgl-odbc"
+                    "lwjgl-openal"
+                    "lwjgl-opencl"
+                    "lwjgl-opengl"
+                    "lwjgl-opengles"
+                    "lwjgl-openvr"
+                    "lwjgl-par"
+                    "lwjgl-remotery"
+                    "lwjgl-rpmalloc"
+                    "lwjgl-sse"
+                    "lwjgl-stb"
+                    "lwjgl-tinyexr"
+                    "lwjgl-tinyfd"
+                    "lwjgl-tootle"
+                    "lwjgl-vulkan"
+                    "lwjgl-xxhash"
+                    "lwjgl-yoga"
+                    "lwjgl-zstd"])
+
+;; It's safe to just include all native dependencies, but you might
+;; save some space if you know you don't need some platform.
+(def LWJGL_PLATFORMS ["linux" "macos" "windows"])
+
+;; These packages don't have any associated native ones.
+(def no-natives? #{"lwjgl-egl" "lwjgl-jawt" "lwjgl-odbc"
+                   "lwjgl-opencl" "lwjgl-vulkan"})
+
+(defn lwjgl-deps-with-natives []
+  (apply concat
+         (for [m LWJGL_MODULES]
+           (let [prefix [(symbol LWJGL_NS m) LWJGL_VERSION]]
+             (into [prefix]
+                   (if (no-natives? m)
+                     []
+                     (for [p LWJGL_PLATFORMS]
+                       (into prefix [:classifier (str "natives-" p)
+                                     :native-prefix ""]))))))))
+
+(def all-dependencies
+  (into ;; Add your non-LWJGL dependencies here
+   '[[org.clojure/clojure "1.8.0"]
+     [org.clojure/core.async "0.4.474"]
+
+     ;; this is for Linux
+     [opencv/opencv "4.0.0"]
+     [opencv/opencv-native "4.0.0"]
+     ]
+   (lwjgl-deps-with-natives)))
+
+
+(defproject clj-lwjgl-vplayer "0.1.0-SNAPSHOT"
+  :description "FIXME: write description"
+  :url "http://example.com/FIXME"
+  :license {:name "Eclipse Public License"
+            :url "http://www.eclipse.org/legal/epl-v10.html"}
+  :dependencies ~all-dependencies
+  :injections [(clojure.lang.RT/loadLibrary org.opencv.core.Core/NATIVE_LIBRARY_NAME)]
+  :jvm-opts ^:replace ~(jvm-opts)
+  )
+   #+END_SRC
+
+** OpenCV
+   [[https://docs.opencv.org/2.4/doc/tutorials/introduction/clojure_dev_intro/clojure_dev_intro.html][ここ]] をそのまま使いました。以下は自分がやったことをまとめたものです。
+   
+*** OpenCV を Clojure で使う
+**** Clojure　環境をセットアップしましょう
+     Clojureの環境をあなたの開発環境（ex. Mac, Linux）にインストールしてください。
+     - [[https://github.com/technomancy/leiningen#installation][ここ]] に従って Leiningen をインストールしましょう
+     それが終わったら、新しく作業フォルダ (例えば simple-sample) を作成し、そこで ~lein run~ コマンドが実行できることを確認してください。
+
+     #+BEGIN_SRC text
+     $ cd path/to/simple-sample
+     $ lein run
+     
+     user=>
+     #+END_SRC
+
+**** OpenCV をダウンロードしてビルドしましょう
+     以下の例に従って OpenCV をビルドしてください。
+     #+BEGIN_SRC shell
+     $ mkdir ~/opt
+     $ cd ~/opt 
+     $ git clone https://github.com/opencv/opencv.git
+     $ cd opencv
+     $ git checkout 3.4.0
+     $ mkdir build
+     $ cd build
+     $ cmake -DBUILD_SHARED_LIBS=OFF ..
+     ...
+     ...
+     ...
+     make -j8
+     #+END_SRC
+**** Leiningen plugin のツールである localrepo をインストールしましょう  
+     #+BEGIN_SRC shell
+     $ cd ~/.lein
+     #+END_SRC
+     もし ~/.lein フォルダがない場合には作成してください。
+     #+BEGIN_SRC shell
+     $ mkdir ~/.lein
+     $ cd ~/.lein
+     #+END_SRC
+     次に、profiles.clj を作成して以下の文を追加してください。
+     #+BEGIN_SRC clojure 
+     {:user {:plugins [[lein-localrepo "LATEST"]]}}
+     #+END_SRC
+     既にファイルがある場合には追記してください。(以下は例)
+     #+BEGIN_SRC clojure
+     {:user {:plugins [[lein-cljsbuild "LATEST"]
+                  [lein-figwheel "LATEST"]
+                  [lein-localrepo "LATEST"] ;; ここ 
+                  [luminus/lein-template "2.9.9.2"]]
+        :dependencies [[org.clojure/tools.nrepl "LATEST"]]}}
+     #+END_SRC
+     次に以下のコマンドを実行してください。
+     #+BEGIN_SRC shell
+     $ lein deps
+     #+END_SRC
+**** OpenCV を Clojure で使えるようにしましょう
+     先程 OpenCV をインストールしたフォルダ =~/opt= にある以下のファイルが必要になります。
+     - ./build/bin/opencv-400.jar
+     - ./build/lib/libopencv_java400.[so/dll/dylib]
+       Linux で OpenCV をビルドした際には .so 、Mac では dylib 、Windows では dll が見つかると思います。
+       それぞれの環境で必要になりますので、見つかったそれを使いましょう（逆に言うと、このlibファイルが対応していないOSでは動かないので、つまりこれを用いてクロスプラットフォームなアプリケーションを作るのは難しいということになる・・・のかな？）
+   　これらのファイルを以下の例に従って配置してください。
+   #+BEGIN_SRC shell
+   $ mkdir ~/opencv-to-native
+   $ cp /path/to/opencv-400.jar ~/opencv-to-native
+   $ mkdir -p ~/opencv-to-native/native/macosx/x86_64 # 各環境に合わせてください
+   $ cp /path/to/libopencv_java400.dylib # 各環境に合わせてください
+   #+END_SRC
+
+   以下の表に従って、nativeフォルダに適切なファイルを設置してください。
+|---------------+----+---------|
+| OS            |    |         |
+|---------------+----+---------|
+| Mac           | -> | macosx  |
+| Windows       | -> | windows |
+| Linux         | -> | linux   |
+| SunOS         | -> | solaris |
+|---------------+----+---------|
+| Architectures |    |         |
+|---------------+----+---------|
+| amd64         | -> | x86_64  |
+| x86_64        | -> | x86_64  |
+| x86           | -> | x86     |
+| i386          | -> | x86     |
+| arm           | -> | arm     |
+| sparc         | -> | sparc   |
+|---------------+----+---------|
+**** native library を jar ファイルにパッケージ化しましょう
+     以下のコマンドを実行して native-jar を作成してください。
+     #+BEGIN_SRC shell
+     $ cd ~/opencv-to-native
+     $ jar -cMf opencv-native-400.jar native
+     #+END_SRC
+     
+     これによって以下のような構造が出来上がるはずです。
+     #+BEGIN_SRC txt
+     opencv-to-native 
+     |
+     |- native 
+     |  |- macosx 
+     |     |- x86_64
+     |        |- libopencv_java400.dylib
+     |- opencv-400.jar
+     |- opencv-native-400.jar
+     #+END_SRC
+**** leiningen に作成した jar ファイルをインストールしましょう
+     以下のコマンドを実行してください。
+     #+BEGIN_SRC shell
+     $ cd ~/opencv-to-native
+     $ lein localrepo install opencv-400.jar opencv/opencv 4.0.0
+     $ lein localrepo install opencv-native-400.jar opencv/opencv-native 4.0.0
+     #+END_SRC
+**** 追記
+     以上であなたの環境でOpenCVをleiningen から簡単に利用することが出来るようになりました。以下に使用例として project.clj を紹介します。
+     #+BEGIN_SRC clojure
+     (defproject simple-sample "0.1.0-SNAPSHOT"
+  :description "FIXME: write description"
+  :url "http://example.com/FIXME"
+  :license {:name "Eclipse Public License"
+            :url "http://www.eclipse.org/legal/epl-v10.html"}
+  :dependencies [[org.clojure/clojure "1.5.1"]
+                 [opencv/opencv 4.0.0"]
+                 [opencv/opencv-native "4..7"]])
+     #+END_SRC
+**** 書いたプログラム
+     [[http://asukiaaa.blogspot.jp/2017/04/clojureopencv32javaxswing.html][ここ]] にあるコードを写経しました。
+     
+** LWJGL
+   [[https://github.com/lwjglgamedev/lwjglbook/blob/master/chapter01/src/main/java/org/lwjglb/game/Main.java][ここ]] のコードを素直にClojureに変換しました。
+   ソース全体
+   #+BEGIN_SRC clojure
+   
+   #+END_SRC
