@@ -4,10 +4,11 @@
            (org.lwjgl.glfw GLFW Callbacks
                            GLFWErrorCallback GLFWKeyCallback)))
 
+;; I think We should add some error function in our atom...
 (defonce param (atom {:width 300
                       :height 300}))
 
-(defonce window (ref 0))
+(defonce window (atom 0))
 
 (defn loop_ []
   (GL/createCapabilities)
@@ -16,6 +17,7 @@
     (GL11/glClear
      (bit-or GL11/GL_COLOR_BUFFER_BIT  GL11/GL_DEPTH_BUFFER_BIT))
     (GLFW/glfwSwapBuffers @window)
+    (println (type window))
     (GLFW/glfwPollEvents)))
 
 (defn init []
@@ -26,15 +28,15 @@
   (GLFW/glfwWindowHint GLFW/GLFW_VISIBLE GLFW/GLFW_FALSE)
   (let [width (:width @param)
         height (:height @param)]
-    (dosync
-     (ref-set window (GLFW/glfwCreateWindow width height "Hello World!" 0 0)))
+    (reset! window (GLFW/glfwCreateWindow width height "Hello World!" 0 0))
+    (println (type window))
     (when (nil? @window)
       (throw (RuntimeException. "Failed to create GLFW window")))
     (GLFW/glfwSetKeyCallback
      @window
      (proxy [GLFWKeyCallback] []
-       (invoke [window k scancode action mods]
-         (when (and (== k GLFW/GLFW_KEY_ESCAPE)
+       (invoke [w k scancode action mods]
+         (when (and (== key GLFW/GLFW_KEY_ESCAPE)
                     (== action GLFW/GLFW_RELEASE))
            (GLFW/glfwSetWindowShouldClose @window true)))))
     (let [vidmode (GLFW/glfwGetVideoMode (GLFW/glfwGetPrimaryMonitor))]
@@ -51,11 +53,14 @@
   (try
     (init)
     (loop_)
+    (GLFW/glfwDestroyWindow @window) ;; add
     (finally
-      (Callbacks/glfwFreeCallbacks @window)
-      (.free (GLFW/glfwSetErrorCallback nil)))))
+      ;; (Callbacks/glfwFreeCallbacks @window)
+      ;; (.free (GLFW/glfwSetErrorCallback nil))
+      (GLFW/glfwTerminate))))
 
 (defn -main []
   (run))
 
 ;; (-main)
+(-main)
