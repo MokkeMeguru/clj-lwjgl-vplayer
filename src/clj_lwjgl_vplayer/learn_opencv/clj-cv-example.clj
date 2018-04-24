@@ -7,6 +7,7 @@
   (:require [clojure.core.async :as async]))
 
 (clojure.lang.RT/loadLibrary org.opencv.core.Core/NATIVE_LIBRARY_NAME)
+
 (def color-lena-mat (org.opencv.imgcodecs.Imgcodecs/imread "assets/test.jpg"))
 (def j-frame (new JFrame))
 
@@ -66,6 +67,7 @@
       (.repaint j-frame)
       (recur (inc seconds)))))
 
+;; (-main)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; references
 ;; http://asukiaaa.blogspot.jp/2017/04/clojureopencv32javaxswing.html

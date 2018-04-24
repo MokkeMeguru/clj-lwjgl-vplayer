@@ -72,9 +72,14 @@
    '[[org.clojure/clojure "1.8.0"]
      [org.clojure/core.async "0.4.474"]
 
-     ;; this is for Linux
+     ;; this is for Linux 
      [opencv/opencv "4.0.0"]
      [opencv/opencv-native "4.0.0"]
+
+     ;; bad loading
+     ;; https://mvnrepository.com/artifact/org.bytedeco.javacpp-presets/opencv
+     ;;[org.bytedeco.javacpp-presets/opencv "3.4.1-1.4.1"]
+
      ]
    (lwjgl-deps-with-natives)))
 

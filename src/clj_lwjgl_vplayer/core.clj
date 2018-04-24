@@ -2,19 +2,30 @@
   (:import (org.lwjgl.opengl GL GL11)
            (org.lwjgl Version)
            (org.lwjgl.glfw GLFW Callbacks
-                           GLFWErrorCallback GLFWKeyCallback))
-  (:require [clj-lwjgl-vplayer.video-loader :as vl])
+                           GLFWErrorCallback GLFWKeyCallback)
+           (java.util Timer TimerTask))
+  (:require [clj-lwjgl-vplayer.video-loader :as vl]
+            [clj-lwjgl-vplayer.audio-loader :as al
+             :refer [init-audio load-audio play-sound close-audio]]
+            [clojure.core.async :as async
+             :refer [chan go-loop go >! >!! <! <!! timeout]])
   (:gen-class))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; play video
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(def status (atom
+             {:video-name
+              "assets/LAMUNATION.mp4"
+              :audio-name
+              "assets/LAMUNATION.ogg"}))
+
 (defonce window (ref 0))
 
-;; raise
-;; (def example-filename "assets/world_is_mine.mp4")
-;;(vl/read-frame)
-;;(type @vl/my-frame-buffer)
+(defn load-video [#^String file-name]
+  (vl/read-video-file file-name)
+  (vl/set-infomation))
 
 (defn display []
   (let [info @vl/info]
@@ -26,16 +37,28 @@
      GL11/GL_UNSIGNED_BYTE
      @vl/my-frame-buffer)
     (GL11/glFlush)
-    (vl/read-frame)))
+    (vl/read-frame)
+    ))
 
 (defn loop_ []
-  (GL/createCapabilities)
-  (GL11/glClearColor 1.0 0.0 0.0 0.0)
-  (while (not (GLFW/glfwWindowShouldClose @window))
-    (display)
-    (Thread/sleep 30) ;; this sleep to core.async
-    (GLFW/glfwSwapBuffers @window)
-    (GLFW/glfwPollEvents)))
+  (let [wait-time (/ 1000 (:fps @vl/info))
+        ch (chan)]
+    (GL/createCapabilities)
+    (GL11/glClearColor 1.0 0.0 0.0 0.0)
+    (go-loop []
+      (when (>! ch true)
+        (<! (timeout wait-time))
+        (recur)))
+    (loop [frames (:frames @vl/info)] ;; go-loop だと 別スレッドにされてしまう？
+      ;; loop にすることでメインスレッドで実行することができる。
+      (if (< 0 frames)
+          (if (<!! ch)
+            (when (not (GLFW/glfwWindowShouldClose @window))
+              (do
+                (display)
+                (GLFW/glfwSwapBuffers @window)
+                (GLFW/glfwPollEvents))
+              (recur (dec frames))))))))
 
 (defn init []
   (let [info @vl/info]
@@ -69,8 +92,13 @@
 (defn run []
   (println "Hello LWJGL " +  (Version/getVersion))
   (try
+  (init-audio)
+  (load-audio (:audio-name @status))
+    (load-video (:video-name @status))
     (init)
+    (play-sound)
     (loop_)
+    (close-audio)
     (GLFW/glfwDestroyWindow @window) ;; add
     (finally
       (Callbacks/glfwFreeCallbacks @window)
@@ -81,4 +109,5 @@
 
 (defn -main
   []
+  (run)
   (println "Good"))

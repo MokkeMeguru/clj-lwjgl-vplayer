@@ -8,6 +8,9 @@
            (org.opencv.imgproc Imgproc)
            (org.lwjgl BufferUtils)))
 
+;; load opencv?
+(clojure.lang.RT/loadLibrary org.opencv.core.Core/NATIVE_LIBRARY_NAME)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; load the video and return video information
 ;;
@@ -15,15 +18,15 @@
 ;;   ex. fps width height channels
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defonce info (atom {:error nil
-                     :fps 0
-                     :width 0
-                     :height 0
-                     :frames 0}))
+(def info (atom {:error nil
+                 :fps 0
+                 :width 0
+                 :height 0
+                 :frames 0}))
 
-(defonce my-video (atom nil))
+(def my-video (atom nil))
 
-(defonce example-filename "assets/world_is_mine.mp4")
+(def example-filename "assets/world_is_mine.mp4")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; bytebuffer ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -79,25 +82,23 @@
     (.get @frame 0 0 @my-frame-bytes)
     (.flip (.put @my-frame-buffer @my-frame-bytes))))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; test
 
 ;;  (def example-filename "assets/world_is_mine.mp4")
 
+;; (defn read-infomation []
+;;   (set-infomation @my-video)
+;;   (let [infomation @info]
+;;     (println "Width : " (:width info))
+;;     (println "Height: " (:height info))
+;;     (println "Frames: " (:frames info))
+;;     (println "FPS :" (:fps info))))
 
-(defn read-infomation []
-  (set-infomation @my-video)
-  (let [infomation @info]
-    (println "Width : " (:width info))
-    (println "Height: " (:height info))
-    (println "Frames: " (:frames info))
-    (println "FPS :" (:fps info))))
-
-
-(read-video-file example-filename)
+ (read-video-file example-filename)
 (set-infomation)
-(read-frame)
+(str @info)
+ ;; (read-frame)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
