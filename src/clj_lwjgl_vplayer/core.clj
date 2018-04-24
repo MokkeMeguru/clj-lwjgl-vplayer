@@ -17,9 +17,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (def status (atom
              {:video-name
-              "assets/LAMUNATION.mp4"
+              "assets/world_is_mine.mp4"
               :audio-name
-              "assets/LAMUNATION.ogg"}))
+              "assets/world_is_mine.ogg"}))
 
 (defonce window (ref 0))
 
