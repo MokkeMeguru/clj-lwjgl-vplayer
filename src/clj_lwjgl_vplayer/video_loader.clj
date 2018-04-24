@@ -25,29 +25,28 @@
                  :height 0
                  :frames 0}))
 
-(def my-video (atom nil))
+(def my-video (volatile! nil))
 
-(def example-filename (str (io/file (io/resource "../assets/world_is_mine.ogg"))))
+(def example-filename (str (io/file (io/resource "./assets/world_is_mine.mp4"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; bytebuffer ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def my-frame-bytes (atom nil))
+(def my-frame-bytes (volatile! nil))
 
-(def my-frame-buffer (atom nil))
+(def my-frame-buffer (volatile! nil))
 
-(def frame (atom (Mat.)))
+(def frame (volatile! (Mat.)))
 
-(def sub-frame (atom (Mat.)))
+(def sub-frame (volatile! (Mat.)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 (defn read-video-file
   "read video file
   filename: it's the video file path
   return: org.opencv.videoio.VideoCapture"
   [#^String filename]
-  (reset! my-video (VideoCapture. filename))) 
+  (vreset! my-video (VideoCapture. filename))) 
 
 (defn set-infomation []
   (if (nil? @my-video)
@@ -61,10 +60,10 @@
       (swap! info assoc :width width)
       (swap! info assoc :height height)
       (swap! info assoc :frames frames)
-      (reset! my-frame-bytes (byte-array
-                              (* 3 width height)))
-      (reset! my-frame-buffer (BufferUtils/createByteBuffer
-                               (* 3 width height))))))
+      (vreset! my-frame-bytes (byte-array
+                               (* 3 width height)))
+      (vreset! my-frame-buffer (BufferUtils/createByteBuffer
+                                (* 3 width height))))))
 
 (defn read-frame
   "read frame
@@ -97,7 +96,7 @@
 ;;     (println "Frames: " (:frames info))
 ;;     (println "FPS :" (:fps info))))
 
-;; (read-video-file example-filename)
+;; (read-video-file "assets/world_is_mine.mp4")
 ;; (set-infomation)
 ;; (str @info)
 ;; (read-frame)

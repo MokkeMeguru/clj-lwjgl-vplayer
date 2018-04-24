@@ -10,7 +10,7 @@
 
 ;; ;FIXME: I want to create an Atom for audio volume and etc ...
 
-(def example-audio (str (io/file (io/resource "./assets/world_is_mine.ogg"))))
+(def example-audio (str (io/file (io/resource "../assets/world_is_mine.ogg"))))
 
 (def state
   (atom
@@ -106,15 +106,11 @@
 ;;   (.OpenAL10 st));; check true => it's shows openAL10's support.
 ;; (close-audio)
 
- ;;(init-audio)
 
-
-
- ;;(load-audio example-audio)
-
-
+;; (init-audio)
+;; (load-audio "./assets/world_is_mine.ogg")
 ;; (:channels @state)
- ;;(play-sound)
+;; (play-sound)
 
 
 ;; (close-audio)

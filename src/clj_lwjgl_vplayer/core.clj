@@ -23,7 +23,7 @@
               :audio-name
               "../assets/world_is_mine.ogg"}))
 
-(defonce window (ref 0))
+(def window (volatile! 0))
 
 (defn load-video [#^String file-name]
   (vl/read-video-file file-name)
@@ -45,6 +45,7 @@
 (defn loop_ []
   (let [wait-time (/ 1000 (:fps @vl/info))
         ch (chan)]
+    (println (:fps @vl/info))
     (GL/createCapabilities)
     (GL11/glClearColor 1.0 0.0 0.0 0.0)
     (go-loop []
@@ -57,7 +58,11 @@
           (if (<!! ch)
             (when (not (GLFW/glfwWindowShouldClose @window))
               (do
-                (display)
+                (if-not (== (mod frames 24) 0)
+                  (display)
+                  (do (display)
+                      (display)
+                      (dec frames)))
                 (GLFW/glfwSwapBuffers @window)
                 (GLFW/glfwPollEvents))
               (recur (dec frames))))))))
@@ -71,8 +76,7 @@
     (GLFW/glfwWindowHint GLFW/GLFW_VISIBLE GLFW/GLFW_FALSE)
     (let [width (int (:width info))
           height (int (:height info))]
-      (dosync
-       (ref-set window (GLFW/glfwCreateWindow width height "Hello World!" 0 0)))
+      (vreset! window (GLFW/glfwCreateWindow width height "Hello World!" 0 0))
       (when (nil? @window)
         (throw (RuntimeException. "Failed to create GLFW window")))
       (GLFW/glfwSetKeyCallback
@@ -94,8 +98,8 @@
 (defn run []
   (println "Hello LWJGL " +  (Version/getVersion))
   (try
-  (init-audio)
-  (load-audio (:audio-name @status))
+    (init-audio)
+    (load-audio (:audio-name @status))
     (load-video (:video-name @status))
     (init)
     (play-sound)
