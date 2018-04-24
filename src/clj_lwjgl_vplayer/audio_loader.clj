@@ -5,11 +5,12 @@
            (java.nio ByteBuffer)
            (org.lwjgl.system MemoryStack MemoryUtil)
            (org.lwjgl.stb STBVorbis)
-           (org.lwjgl.system.libc LibCStdlib)))
+           (org.lwjgl.system.libc LibCStdlib))
+  (:require [clojure.java.io :as io]))
 
 ;; ;FIXME: I want to create an Atom for audio volume and etc ...
 
-(def example-audio "assets/world_is_mine.ogg")
+(def example-audio (str (io/file (io/resource "./assets/world_is_mine.ogg"))))
 
 (def state
   (atom

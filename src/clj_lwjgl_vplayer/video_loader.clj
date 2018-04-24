@@ -6,7 +6,8 @@
            (org.opencv.videoio VideoCapture Videoio)
            (org.opencv.core Core Mat)
            (org.opencv.imgproc Imgproc)
-           (org.lwjgl BufferUtils)))
+           (org.lwjgl BufferUtils))
+  (:require [clojure.java.io :as io]))
 
 ;; load opencv?
 (clojure.lang.RT/loadLibrary org.opencv.core.Core/NATIVE_LIBRARY_NAME)
@@ -26,10 +27,11 @@
 
 (def my-video (atom nil))
 
-(def example-filename "assets/world_is_mine.mp4")
+(def example-filename (str (io/file (io/resource "../assets/world_is_mine.ogg"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; bytebuffer ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (def my-frame-bytes (atom nil))
 
 (def my-frame-buffer (atom nil))
@@ -95,10 +97,10 @@
 ;;     (println "Frames: " (:frames info))
 ;;     (println "FPS :" (:fps info))))
 
- (read-video-file example-filename)
-(set-infomation)
-(str @info)
- ;; (read-frame)
+;; (read-video-file example-filename)
+;; (set-infomation)
+;; (str @info)
+;; (read-frame)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

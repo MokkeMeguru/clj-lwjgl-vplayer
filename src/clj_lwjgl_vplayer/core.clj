@@ -8,18 +8,20 @@
             [clj-lwjgl-vplayer.audio-loader :as al
              :refer [init-audio load-audio play-sound close-audio]]
             [clojure.core.async :as async
-             :refer [chan go-loop go >! >!! <! <!! timeout]])
+             :refer [chan go-loop go >! >!! <! <!! timeout]]
+            [clojure.java.io :as io])
   (:gen-class))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; play video
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (def status (atom
              {:video-name
-              "assets/world_is_mine.mp4"
+              "../assets/world_is_mine.mp4"
               :audio-name
-              "assets/world_is_mine.ogg"}))
+              "../assets/world_is_mine.ogg"}))
 
 (defonce window (ref 0))
 
