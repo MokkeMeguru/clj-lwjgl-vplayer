@@ -22,7 +22,8 @@
               "./assets/world_is_mine.mp4"
               :audio-name
               "./assets/world_is_mine.ogg"}))
-(def waiter (atom 60))
+
+(def waiter (atom 30))
 
 (def window (volatile! 0))
 
@@ -47,7 +48,6 @@
   (let [wait-time (/ 1000 (:fps @vl/info))
         ch (chan)
         waiter @waiter]
-    (println (:fps @vl/info))
     (GL/createCapabilities)
     (GL11/glClearColor 1.0 0.0 0.0 0.0)
     (go-loop []
@@ -76,6 +76,7 @@
       (throw (IllegalStateException. (str "Unable to initialize GLFW"))))
     (GLFW/glfwDefaultWindowHints)
     (GLFW/glfwWindowHint GLFW/GLFW_VISIBLE GLFW/GLFW_FALSE)
+    (GLFW/glfwWindowHint GLFW/GLFW_RESIZABLE GLFW/GLFW_FALSE)
     (let [width (int (:width info))
           height (int (:height info))]
       (vreset! window (GLFW/glfwCreateWindow width height "Hello World!" 0 0))
@@ -113,16 +114,12 @@
       (.free (GLFW/glfwSetErrorCallback nil))
       (GLFW/glfwTerminate)))) ;; add
 
-;; (run)
+ ;; (run)
 
 (defn -main
   []
-  (println (.getCanonicalPath (io/file "../assets/LAMUNATION.mp4")))  
   (swap! status assoc :video-name "../assets/world_is_mine.mp4")
   (swap! status assoc :audio-name "../assets/world_is_mine.ogg")
-  (swap! status assoc :video-name  "LAMUNATION.mp4")
-  (swap! status assoc :audio-name  "LAMUNATION.ogg")
-  (run)
-  (println "Good"))
+  (run))
 
 

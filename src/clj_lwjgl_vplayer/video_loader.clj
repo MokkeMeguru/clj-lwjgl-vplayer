@@ -60,9 +60,6 @@
       (swap! info assoc :width width)
       (swap! info assoc :height height)
       (swap! info assoc :frames frames)
-      (println (.isOpened @my-video))
-      (println " " fps)
-      (println " " width)
       (vreset! my-frame-bytes (byte-array
                                (* 3 width height)))
       (vreset! my-frame-buffer (BufferUtils/createByteBuffer
