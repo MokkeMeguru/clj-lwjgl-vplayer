@@ -9,7 +9,7 @@
              :refer [init-audio load-audio play-sound close-audio]]
             [clojure.core.async :as async
              :refer [chan go-loop go >! >!! <! <!! timeout]]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io :refer [input-stream file]])
   (:gen-class))
 
 
@@ -21,8 +21,9 @@
              {:video-name
               "./assets/world_is_mine.mp4"
               :audio-name
-              "./assets/world_is_mine.ogg"}))
-(def waiter (atom 60))
+              "./assets/LAMUNATION.ogg"}))
+
+(def waiter (atom 15))
 
 (def window (volatile! 0))
 
@@ -70,7 +71,7 @@
               (recur (dec frames))))))))
 
 (defn init []
-  (let [info @vl/info]
+  (let [info (:video-info @status)]
     (.set (GLFWErrorCallback/createPrint System/err))
     (when (not (GLFW/glfwInit))
       (throw (IllegalStateException. (str "Unable to initialize GLFW"))))
@@ -113,16 +114,17 @@
       (.free (GLFW/glfwSetErrorCallback nil))
       (GLFW/glfwTerminate)))) ;; add
 
-;; (run)
+;;  (run)
 
 (defn -main
   []
   (println (.getCanonicalPath (io/file "../assets/LAMUNATION.mp4")))  
   (swap! status assoc :video-name "../assets/world_is_mine.mp4")
   (swap! status assoc :audio-name "../assets/world_is_mine.ogg")
-  (swap! status assoc :video-name  "LAMUNATION.mp4")
-  (swap! status assoc :audio-name  "LAMUNATION.ogg")
   (run)
   (println "Good"))
 
+
+;;(def t (atom {:a 1 :b {:c 3}}))
+;;(swap! t assoc-in [:b :c] 4 )
 
