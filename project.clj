@@ -78,7 +78,7 @@
 
      ;; bad loading
      ;; https://mvnrepository.com/artifact/org.bytedeco.javacpp-presets/opencv
-     [org.bytedeco.javacpp-presets/opencv "3.4.1-1.4.1"]
+     ;; [org.bytedeco.javacpp-presets/opencv "3.4.0-1.4"]
 
      ]
    (lwjgl-deps-with-natives)))
@@ -92,7 +92,6 @@
   :dependencies ~all-dependencies
   :injections [(clojure.lang.RT/loadLibrary org.opencv.core.Core/NATIVE_LIBRARY_NAME)]
   :jvm-opts ^:replace ~(jvm-opts)
-  :resource-paths ["assets"]
   :main clj-lwjgl-vplayer.core
   )
 

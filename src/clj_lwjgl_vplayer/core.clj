@@ -19,9 +19,10 @@
 
 (def status (atom
              {:video-name
-              "../assets/world_is_mine.mp4"
+              "./assets/world_is_mine.mp4"
               :audio-name
-              "../assets/world_is_mine.ogg"}))
+              "./assets/world_is_mine.ogg"}))
+(def waiter (atom 60))
 
 (def window (volatile! 0))
 
@@ -44,7 +45,8 @@
 
 (defn loop_ []
   (let [wait-time (/ 1000 (:fps @vl/info))
-        ch (chan)]
+        ch (chan)
+        waiter @waiter]
     (println (:fps @vl/info))
     (GL/createCapabilities)
     (GL11/glClearColor 1.0 0.0 0.0 0.0)
@@ -58,7 +60,7 @@
           (if (<!! ch)
             (when (not (GLFW/glfwWindowShouldClose @window))
               (do
-                (if-not (== (mod frames 24) 0)
+                (if-not (== (mod frames waiter) 0)
                   (display)
                   (do (display)
                       (display)
@@ -115,5 +117,12 @@
 
 (defn -main
   []
+  (println (.getCanonicalPath (io/file "../assets/LAMUNATION.mp4")))  
+  (swap! status assoc :video-name "../assets/world_is_mine.mp4")
+  (swap! status assoc :audio-name "../assets/world_is_mine.ogg")
+  (swap! status assoc :video-name  "LAMUNATION.mp4")
+  (swap! status assoc :audio-name  "LAMUNATION.ogg")
   (run)
   (println "Good"))
+
+
