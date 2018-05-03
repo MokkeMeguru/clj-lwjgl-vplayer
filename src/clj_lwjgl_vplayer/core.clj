@@ -17,32 +17,23 @@
 ;; play video
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; add ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; go-loop
-;;  i (:frames info)
-;;  when-not (zero? i)
-;;  (do (while ((.buf chan) > (:fps info))
-;;         (thread sleep 500))
-;;      (read-frame)
-;;      (>! chan vl/my-byte-buffer)
-;;      (dec i)
-;;      (recur))
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 (def status (atom
              {:video-name
-              "./assets/world_is_mine.mp4"
+              "./assets/.mp4"
               :audio-name
-              "./assets/world_is_mine.ogg"}))
+              "./assets/.ogg"}))
 
 (def waiter (atom 30))
 
 (def window (volatile! 0))
 
+
 (defn load-video [#^String file-name]
   (vl/read-video-file file-name)
   (vl/set-infomation))
+
+;; chank!
+(def ch2 (chan))
 
 (defn display []
   (let [info @vl/info]
@@ -52,15 +43,16 @@
      (int (:height info))
      GL11/GL_RGB
      GL11/GL_UNSIGNED_BYTE
-     @vl/my-frame-buffer)
+     @vl/my-frame-buffer
+     )
     (GL11/glFlush)
-    (vl/read-frame)
     ))
 
 (defn loop_ []
   (let [wait-time (/ 1000 (:fps @vl/info))
-        ch (chan)
-        waiter @waiter]
+        ch        (chan)
+        waiter    @waiter
+        fps       (:fps @vl/info)]
     (GL/createCapabilities)
     (GL11/glClearColor 1.0 0.0 0.0 0.0)
     (go-loop []
@@ -73,11 +65,8 @@
           (if (<!! ch)
             (when (not (GLFW/glfwWindowShouldClose @window))
               (do
-                (if-not (== (mod frames waiter) 0)
-                  (display)
-                  (do (display)
-                      (display)
-                      (dec frames)))
+                (vl/read-frame)
+                (display)
                 (GLFW/glfwSwapBuffers @window)
                 (GLFW/glfwPollEvents))
               (recur (dec frames))))))))
@@ -127,7 +116,8 @@
       (.free (GLFW/glfwSetErrorCallback nil))
       (GLFW/glfwTerminate)))) ;; add
 
- ;; (run)
+;;  (run)
+;;  (al/close-audio)
 
 (defn -main
   []

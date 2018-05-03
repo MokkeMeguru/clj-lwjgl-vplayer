@@ -75,6 +75,9 @@
      [opencv/opencv "4.0.0"]
      [opencv/opencv-native "4.0.0"]
 
+     ;; https://mvnrepository.com/artifact/org.lz4/lz4-java
+     [org.lz4/lz4-java "1.4.1"]
+
      [slick-util "1.0.0"]
      ;; bad loading
      ;; https://mvnrepository.com/artifact/org.bytedeco.javacpp-presets/opencv
