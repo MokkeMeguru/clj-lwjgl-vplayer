@@ -17,6 +17,19 @@
 ;; play video
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; add ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; go-loop
+;;  i (:frames info)
+;;  when-not (zero? i)
+;;  (do (while ((.buf chan) > (:fps info))
+;;         (thread sleep 500))
+;;      (read-frame)
+;;      (>! chan vl/my-byte-buffer)
+;;      (dec i)
+;;      (recur))
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (def status (atom
              {:video-name
               "./assets/world_is_mine.mp4"
